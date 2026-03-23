@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelGo | 您的深度旅遊指南</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Sans TC -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; scroll-behavior: smooth; }
+        [x-cloak] { display: none !important; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .carousel-track { transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .page-transition { transition: all 0.4s ease-in-out; }
+        .text-gradient {
+            background: linear-gradient(to right, #6366f1, #fb7185);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+
+    <script>
+        // 在 Alpine.js 載入前進行初始化定義，防止 ReferenceError
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('travelApp', () => ({
+                isMenuOpen: false,
+                searchQuery: '',
+                carouselIndex: 0,
+                activeSpot: null,
+
+                carouselItems: [
+                    { id: 1, title: '探索亞洲脈動', desc: '從繁華都市到寧靜寺院的奇妙交織。', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=1200' },
+                    { id: 2, title: '漫遊歐洲經典', desc: '走進像電影場景般的歷史街頭。', image: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&q=80&w=1200' }
+                ],
+
+                spots: [
+                    { 
+                        id: 1, 
+                        name: "台北 101", 
+                        region: "亞洲", 
+                        location: "台北, 台灣", 
+                        image: "https://images.unsplash.com/photo-1464306208223-e0b4495a5553?auto=format&fit=crop&q=80&w=1200",
+                        description: "台北 101 曾是世界第一高樓，是台灣最著名的地標。建築設計融合了東方節節高升的哲學與現代抗震科技，頂樓觀景台可俯瞰整座台北盆地，尤其在黃昏與夜晚時分更是壯觀。",
+                        features: ["世界級觀景台", "精品購物中心", "跨年煙火勝地", "高速電梯體驗"],
+                        transport: ["搭乘捷運淡水信義線（紅線）至「台北101/世貿站」4號出口即可到達。", "多線公車均有經過，交通極其便利。"]
+                    },
+                    { 
+                        id: 2, 
+                        name: "富士山", 
+                        region: "亞洲", 
+                        location: "靜岡, 日本", 
+                        image: "https://images.unsplash.com/photo-1524413145094-2b5a9699ce1b?auto=format&fit=crop&q=80&w=1200",
+                        description: "富士山是日本的精神象徵，其完美的圓錐形山體終年積雪。無論是在河口湖畔欣賞倒映山景，還是親自攀登這座神聖的山峰，都能感受到大自然的純淨與震撼。",
+                        features: ["世界文化遺產", "逆富士絕景", "溫泉小鎮體驗", "四季皆有美景"],
+                        transport: ["從東京新宿站搭乘「富士回遊」特急列車，約 2 小時可直達河口湖站。", "也可於新宿高速巴士總站搭乘往河口湖的直達巴士。"]
+                    },
+                    { 
+                        id: 3, 
+                        name: "艾菲爾鐵塔", 
+                        region: "歐洲", 
+                        location: "巴黎, 法國", 
+                        image: "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&q=80&w=800",
+                        description: "這座鐵塔是浪漫巴黎的化身，高聳入雲。每到夜晚，整座鐵塔會點亮閃爍的燈光，如夢似幻。漫步在塔下的戰神廣場，是每一位旅人來到巴黎的必經儀式。",
+                        features: ["極致浪漫氛圍", "城市全景視野", "法式高級餐廳", "夜間閃爍秀"],
+                        transport: ["搭乘地鐵 6 號線至 Bir-Hakeim 站，或 9 號線至 Trocadéro 站。", "區域火車 RER C 線至 Champ de Mars-Tour Eiffel 站步行即可。"]
+                    },
+                    { 
+                        id: 4, 
+                        name: "羅馬競技場", 
+                        region: "歐洲", 
+                        location: "羅馬, 義大利", 
+                        image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=800",
+                        description: "羅馬競技場是古羅馬帝國最偉大的建築奇蹟。這座宏偉的圓形劇場見證了兩千年的歷史滄桑，走進內部，彷彿能聽見古時角鬥士與觀眾的歡呼迴聲。",
+                        features: ["千年古蹟探索", "壯觀圓形建築", "歷史文化洗禮", "絕佳攝影景點"],
+                        transport: ["搭乘羅馬地鐵 B 線至 Colosseo 站，出站即可看見競技場。", "市區多線地面電車與公車亦可抵達。"]
+                    },
+                    { 
+                        id: 5, 
+                        name: "聖托里尼", 
+                        region: "歐洲", 
+                        location: "伊亞, 希臘", 
+                        image: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=800",
+                        description: "聖托里尼以其藍白相間的建築與愛琴海的深藍海景聞名。伊亞（Oia）的日落被譽為全世界最美的夕陽，沿著懸崖小路漫步，每一角落都是一張明信片。",
+                        features: ["經典藍白建築", "全球最美夕陽", "斷崖海景體驗", "迷人小徑散策"],
+                        transport: ["由雅典搭乘國內線班機約 45 分鐘，或搭乘渡輪前往費拉（Fira）碼頭。", "島上建議租用小車或搭乘當地的公共巴士。"]
+                    }
+                ],
+
+                init() {
+                    this.$nextTick(() => lucide.createIcons());
+                    setInterval(() => { this.carouselIndex = (this.carouselIndex + 1) % this.carouselItems.length; }, 5000);
+                    this.$watch('activeSpot', () => this.refreshIcons());
+                    this.$watch('searchQuery', () => this.refreshIcons());
+                },
+
+                refreshIcons() {
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                performSearch() {
+                    if (!this.searchQuery.trim()) return;
+                    const query = this.searchQuery.toLowerCase().trim();
+                    const match = this.spots.find(s => s.name.toLowerCase().includes(query));
+                    if (match) {
+                        this.goToDetail(match);
+                    } else {
+                        const el = document.getElementById('spots-grid');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }
+                },
+
+                goToDetail(spot) {
+                    this.activeSpot = spot;
+                    this.isMenuOpen = false;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                resetView() {
+                    this.activeSpot = null;
+                    this.searchQuery = '';
+                    this.isMenuOpen = false;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                get filteredSpots() {
+                    const q = this.searchQuery.toLowerCase();
+                    return this.spots.filter(s => 
+                        s.name.toLowerCase().includes(q) || 
+                        s.location.toLowerCase().includes(q) || 
+                        s.region.toLowerCase().includes(q)
+                    );
+                }
+            }));
+        });
+    </script>
+    <!-- Alpine.js 延遲載入 -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-[#FBFDFF] text-gray-900" x-data="travelApp()">
+
+    <!-- 導覽列 -->
+    <nav class="fixed top-0 w-full bg-white/70 backdrop-blur-xl z-50 border-b border-indigo-50/50">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 text-left">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center space-x-3 cursor-pointer group" @click="resetView()">
+                    <div class="w-11 h-11 bg-gradient-to-br from-indigo-500 to-rose-400 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 group-hover:rotate-12 transition-transform">
+                        <i data-lucide="palmtree" class="text-white w-6 h-6"></i>
+                    </div>
+                    <span class="text-2xl font-black tracking-tighter text-indigo-950">TravelGo</span>
+                </div>
+
+                <div class="hidden md:flex items-center space-x-10">
+                    <button @click="resetView()" class="text-gray-500 hover:text-indigo-600 font-bold transition-colors">探索首頁</button>
+                    <a href="#" class="text-gray-500 hover:text-indigo-600 font-bold transition-colors">行程預訂</a>
+                    <button class="bg-indigo-600 text-white px-7 py-3 rounded-2xl font-black hover:bg-indigo-700 hover:shadow-xl transition-all active:scale-95">
+                        登入
+                    </button>
+                </div>
+
+                <button @click="isMenuOpen = !isMenuOpen" class="md:hidden p-2 text-indigo-900 bg-indigo-50 rounded-xl">
+                    <i :data-lucide="isMenuOpen ? 'x' : 'menu'" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要內容區 -->
+    <div class="max-w-[1600px] mx-auto flex pt-20">
+        
+        <!-- 左側邊欄 -->
+        <aside class="hidden md:block w-80 h-[calc(100vh-80px)] sticky top-20 p-10 overflow-y-auto scrollbar-hide border-r border-indigo-50/50 bg-white/30 text-left">
+            <div class="space-y-12">
+                <div>
+                    <h3 class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-8 flex items-center">
+                        <span class="w-8 h-[2px] bg-indigo-100 mr-3"></span> 亞洲精選
+                    </h3>
+                    <nav class="space-y-3">
+                        <template x-for="spot in spots.filter(s => s.region === '亞洲')" :key="spot.id">
+                            <button @click="goToDetail(spot)" 
+                                    :class="activeSpot?.id === spot.id ? 'bg-indigo-600 text-white shadow-xl' : 'text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'"
+                                    class="w-full flex items-center p-4 rounded-2xl transition-all font-bold">
+                                <i data-lucide="map-pin" class="w-4 h-4 mr-3 opacity-50"></i>
+                                <span x-text="spot.name"></span>
+                            </button>
+                        </template>
+                    </nav>
+                </div>
+
+                <div>
+                    <h3 class="text-[10px] font-black text-rose-400 uppercase tracking-[0.3em] mb-8 flex items-center">
+                        <span class="w-8 h-[2px] bg-rose-100 mr-3"></span> 歐洲精選
+                    </h3>
+                    <nav class="space-y-3">
+                        <template x-for="spot in spots.filter(s => s.region === '歐洲')" :key="spot.id">
+                            <button @click="goToDetail(spot)" 
+                                    :class="activeSpot?.id === spot.id ? 'bg-rose-500 text-white shadow-xl' : 'text-gray-500 hover:bg-rose-50 hover:text-rose-600'"
+                                    class="w-full flex items-center p-4 rounded-2xl transition-all font-bold">
+                                <i data-lucide="map-pin" class="w-4 h-4 mr-3 opacity-50"></i>
+                                <span x-text="spot.name"></span>
+                            </button>
+                        </template>
+                    </nav>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 右側視窗 -->
+        <main class="flex-1 px-4 sm:px-10 lg:px-16 py-10 overflow-x-hidden text-left">
+            
+            <!-- 第一層：首頁 -->
+            <div x-show="!activeSpot" x-transition:enter="page-transition opacity-0 translate-y-6" x-transition:enter-end="opacity-100 translate-y-0">
+                <section class="mb-24">
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="lg:w-1/2">
+                            <h1 class="text-5xl md:text-8xl font-black text-gray-900 leading-[1.1] mb-10 tracking-tighter">
+                                發現你的 <br>
+                                <span class="text-gradient">深度冒險</span>
+                            </h1>
+                            <p class="text-gray-500 text-xl md:text-2xl mb-12 leading-relaxed font-medium">
+                                在下方搜尋您心儀的地點，或是從側邊欄開啟亞洲與歐洲的深度推薦。
+                            </p>
+                            
+                            <div class="relative max-w-xl group">
+                                <div class="absolute inset-y-0 left-8 flex items-center pointer-events-none">
+                                    <i data-lucide="search" class="w-6 h-6 text-indigo-300"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    x-model="searchQuery" 
+                                    @keyup.enter="performSearch()"
+                                    class="w-full pl-16 pr-36 py-7 bg-white shadow-2xl shadow-indigo-100 rounded-[2.5rem] outline-none text-xl font-bold border-2 border-transparent focus:border-indigo-100 transition-all"
+                                    placeholder="想去哪裡冒險？輸入景點關鍵字...">
+                                <button 
+                                    @click="performSearch()"
+                                    class="absolute right-4 top-4 bottom-4 bg-indigo-600 text-white px-10 rounded-[1.8rem] font-black hover:bg-indigo-700 transition-all shadow-lg active:scale-95">
+                                    搜尋
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="lg:w-1/2 w-full">
+                            <div class="relative rounded-[4rem] overflow-hidden shadow-2xl aspect-[16/11] border-[10px] border-white">
+                                <div class="carousel-track flex h-full" :style="`transform: translateX(-${carouselIndex * 100}%)`">
+                                    <template x-for="item in carouselItems" :key="item.id">
+                                        <div class="min-w-full relative h-full">
+                                            <img :src="item.image" class="w-full h-full object-cover">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-12 text-white">
+                                                <h3 class="text-4xl font-black mb-3" x-text="item.title"></h3>
+                                                <p class="text-lg opacity-80" x-text="item.desc"></p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="spots-grid" class="scroll-mt-28">
+                    <h2 class="text-4xl font-black mb-12">精選熱門目的地</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                        <template x-for="spot in filteredSpots" :key="spot.id">
+                            <div @click="goToDetail(spot)" class="bg-white rounded-[3rem] overflow-hidden group cursor-pointer border border-gray-100 hover:shadow-2xl transition-all duration-500">
+                                <div class="relative h-72 overflow-hidden">
+                                    <img :src="spot.image" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000">
+                                    <div class="absolute bottom-6 left-6 bg-white/90 backdrop-blur-md px-5 py-2 rounded-2xl text-xs font-black text-indigo-600 shadow-xl" x-text="spot.region"></div>
+                                </div>
+                                <div class="p-8">
+                                    <h3 class="text-2xl font-black mb-3 group-hover:text-indigo-600" x-text="spot.name"></h3>
+                                    <div class="flex items-center text-gray-400 font-bold">
+                                        <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
+                                        <span x-text="spot.location"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <template x-if="filteredSpots.length === 0">
+                        <div class="py-32 text-center text-gray-400">
+                            <p class="text-2xl font-black">找不到符合的景點...</p>
+                            <button @click="resetView()" class="mt-8 text-indigo-600 font-black hover:underline">返回預設清單</button>
+                        </div>
+                    </template>
+                </section>
+            </div>
+
+            <!-- 第二層：景點詳情頁 -->
+            <div x-show="activeSpot" x-cloak x-transition:enter="page-transition opacity-0 scale-95 translate-y-10" x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+                <template x-if="activeSpot">
+                    <div class="max-w-5xl mx-auto space-y-16 pb-20">
+                        <div class="relative h-[500px] rounded-[4.5rem] overflow-hidden shadow-2xl border-[12px] border-white">
+                            <img :src="activeSpot.image" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                            
+                            <button @click="resetView()" class="absolute top-10 left-10 bg-white/20 backdrop-blur-2xl text-white px-8 py-4 rounded-3xl font-black hover:bg-white hover:text-indigo-600 transition-all flex items-center shadow-2xl">
+                                <i data-lucide="arrow-left" class="w-6 h-6 mr-3"></i> 返回首頁
+                            </button>
+
+                            <div class="absolute bottom-12 left-16 text-white">
+                                <span class="px-5 py-2 bg-indigo-600 rounded-full text-xs font-black uppercase mb-6 inline-block shadow-lg" x-text="activeSpot.region"></span>
+                                <h2 class="text-6xl md:text-8xl font-black mb-4 tracking-tighter" x-text="activeSpot.name"></h2>
+                                <p class="text-2xl opacity-90 font-bold flex items-center">
+                                    <i data-lucide="map-pin" class="w-6 h-6 mr-3 text-rose-400"></i>
+                                    <span x-text="activeSpot.location"></span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-3 gap-16">
+                            <div class="lg:col-span-2 space-y-20">
+                                <section>
+                                    <h3 class="text-3xl font-black text-gray-900 mb-8 flex items-center">
+                                        <i data-lucide="sparkles" class="w-8 h-8 mr-4 text-amber-400"></i> 景點特色介紹
+                                    </h3>
+                                    <p class="text-gray-500 text-xl leading-[2] font-medium" x-text="activeSpot.description"></p>
+                                    <div class="grid sm:grid-cols-2 gap-6 mt-12">
+                                        <template x-for="feature in activeSpot.features" :key="feature">
+                                            <div class="flex items-center space-x-4 bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100/30">
+                                                <i data-lucide="check" class="w-5 h-5 text-indigo-500"></i>
+                                                <span class="font-black text-gray-800 text-lg" x-text="feature"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h3 class="text-3xl font-black text-gray-900 mb-8 flex items-center">
+                                        <i data-lucide="bus" class="w-8 h-8 mr-4 text-rose-400"></i> 交通指南
+                                    </h3>
+                                    <div class="space-y-6">
+                                        <template x-for="item in activeSpot.transport" :key="item">
+                                            <div class="flex items-start space-x-6 bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
+                                                <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                                                    <i data-lucide="navigation" class="w-7 h-7 text-indigo-500"></i>
+                                                </div>
+                                                <p class="text-gray-600 text-lg font-bold leading-relaxed" x-text="item"></p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <div class="space-y-8">
+                                <div class="bg-gray-900 rounded-[3rem] p-10 text-white shadow-2xl">
+                                    <h4 class="font-black text-2xl mb-8">旅遊小建議</h4>
+                                    <ul class="space-y-6 text-lg font-bold opacity-80">
+                                        <li class="flex items-center"><i data-lucide="calendar" class="w-5 h-5 mr-4 text-indigo-400"></i> 建議天數：2-3 天</li>
+                                        <li class="flex items-center"><i data-lucide="sun" class="w-5 h-5 mr-4 text-amber-400"></i> 最佳季節：春、秋</li>
+                                    </ul>
+                                    <button class="w-full bg-rose-500 text-white mt-12 py-5 rounded-[2rem] font-black text-xl hover:bg-rose-600 transition-all active:scale-95 shadow-xl shadow-rose-900/20">
+                                        立即預訂
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </main>
+    </div>
+
+    <!-- 頁尾 -->
+    <footer class="bg-gray-950 text-white pt-24 pb-12 mt-20 rounded-t-[6rem] text-center">
+        <div class="max-w-7xl mx-auto px-10">
+            <div class="flex items-center justify-center space-x-3 mb-10">
+                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
+                    <i data-lucide="palmtree" class="text-white w-7 h-7"></i>
+                </div>
+                <span class="text-3xl font-black tracking-tight">TravelGo</span>
+            </div>
+            <p class="text-gray-500 font-black text-lg mb-12">探索不止，腳步不停。讓 TravelGo 成為您最貼心的深度旅遊指南。</p>
+            <div class="border-t border-white/5 pt-10 text-xs font-black text-gray-700 uppercase tracking-[0.4em]">
+                © 2024 TravelGo Interactive. All Adventures Reserved.
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
